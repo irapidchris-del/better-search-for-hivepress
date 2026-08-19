@@ -80,3 +80,11 @@ msgstr ""
 #: updater.php:343
 msgid "Could not rename the update directory."
 msgstr ""
+
+#: updater.php:635
+msgid "No releases have been published for Extended Search for HivePress yet, so there is nothing to update to. This is normal for a brand new copy and does not mean anything is wrong."
+msgstr ""
+
+#: updater.php:638
+msgid "GitHub limits how many update checks one server may make each hour, and this server has reached that limit. Nothing is wrong with the plugin or your site, and checking will work again within the hour."
+msgstr ""

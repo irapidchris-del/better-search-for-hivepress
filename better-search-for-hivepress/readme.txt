@@ -4,7 +4,7 @@ Tags: hivepress, search, attributes, vendors, listings
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,10 @@ Not by default, because they are contact details rather than search terms. A dev
 Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save translations to Loco's "System" location so they survive plugin updates.
 
 == Changelog ==
+
+= 1.5.2 =
+* Checking for updates no longer reports "Could not reach GitHub" when nothing is wrong. GitHub allows a server only a limited number of anonymous update checks each hour, shared by every plugin on the site and, on shared hosting, by every other site on the same server. Running out is ordinary, but it was reported as though the site could not reach GitHub at all. Update checks now read the release from github.com, which sets no such limit, so the message no longer appears. If the limit is ever reached by some other route, the notice now says so plainly instead of blaming your connection.
+* A failed update check no longer hides an update that is genuinely waiting. The last successful answer is kept until a later check succeeds, so a pending update stays on the Plugins screen instead of disappearing for an hour.
 
 = 1.5.1 =
 * Added: a "Rebuild search index" link on the plugin's row on the Plugins screen. Useful after changing which field types are indexed, or any other time you want the plugin to work through everything again from scratch. Searching keeps working while it runs.
