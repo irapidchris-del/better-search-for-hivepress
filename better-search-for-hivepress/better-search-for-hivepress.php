@@ -1,11 +1,19 @@
 <?php
 /**
  * Plugin Name: Better Search for HivePress
- * Description: Extends the HivePress keyword search to also match pricing tier names/descriptions and listing category names/descriptions, including parent categories cascading to their sub-categories.
- * Version:     1.3.0
+ * Plugin URI:  https://github.com/irapidchris-del/better-search-for-hivepress
+ * Description: Extends the HivePress keyword search to also match pricing tier names/descriptions and listing category names/descriptions, including parent categories cascading to their sub-categories. Tier matching additionally needs HivePress Marketplace with "Allow sellers to set pricing tiers" switched on.
+ * Version:     1.4.0
  * Author:      ChrisB @ HivePress Community
  * Author URI:  https://community.hivepress.io/u/chrisb/summary
- * Requires:    HivePress. Tier matching also requires HivePress Marketplace with "Allow sellers to set pricing tiers" enabled.
+ * Text Domain: better-search-for-hivepress
+ * Domain Path: /languages/
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * Requires Plugins: hivepress
+ * License:     GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI:  https://github.com/irapidchris-del/better-search-for-hivepress
  *
  * What it adds to the keyword search, alongside the default title / excerpt / content:
  *   - Pricing tier names and descriptions (via a hidden plaintext copy, because
@@ -19,6 +27,43 @@
 
 defined( 'ABSPATH' ) || exit;
 
+const HPSE_VERSION = '1.4.0';
+
+/**
+ * Main plugin file, for the updater and for plugin_basename() checks.
+ */
+define( 'HPSE_FILE', __FILE__ );
+
+/**
+ * The author's support page.
+ *
+ * One place, so the Plugins row and the View details popup can never drift apart.
+ */
+const HPSE_SUPPORT_URL = 'https://ko-fi.com/chrisbathivepresscommunity';
+
+require_once __DIR__ . '/updater.php';
+
+/**
+ * Says so when HivePress is missing.
+ *
+ * Every hook this plugin uses is a HivePress one, so without HivePress it does
+ * nothing at all - and does it silently, which looks like a broken plugin rather
+ * than a missing dependency. WordPress 6.5 and above blocks activation outright
+ * via the Requires Plugins header; this notice covers older sites.
+ */
+add_action(
+	'admin_notices',
+	function () {
+		if ( function_exists( 'hivepress' ) || ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		echo '<div class="notice notice-error is-dismissible"><p>'
+			. esc_html__( 'Better Search for HivePress needs the HivePress plugin to be installed and activated. Until then it does nothing.', 'better-search-for-hivepress' )
+			. '</p></div>';
+	}
+);
+
 /**
  * Meta key holding the searchable copy of the tier text.
  */
@@ -29,11 +74,13 @@ const HPSE_TIER_META = '_hpse_tier_index';
  */
 const HPSE_CATEGORY_TAX = 'hp_listing_category';
 
-/* -------------------------------------------------------------------------
- * PART 1 — Keep the searchable copy of tier text up to date.
- * Tier data lives inside the listing (serialized), so it can only change when
- * the listing is saved. A precomputed plaintext copy is therefore never stale.
- * ---------------------------------------------------------------------- */
+/*
+--------------------------------------------------------------------------
+PART 1 - Keep the searchable copy of tier text up to date.
+Tier data lives inside the listing (serialized), so it can only change when
+the listing is saved. A precomputed plaintext copy is therefore never stale.
+--------------------------------------------------------------------------
+*/
 
 /**
  * Builds a plaintext string of names + descriptions from a tiers array.
@@ -103,9 +150,11 @@ function hpse_refresh_tier_index( $listing_id, $listing ) {
 add_action( 'hivepress/v1/models/listing/create', 'hpse_refresh_tier_index', 100, 2 );
 add_action( 'hivepress/v1/models/listing/update', 'hpse_refresh_tier_index', 100, 2 );
 
-/* -------------------------------------------------------------------------
- * PART 2 — One-time backfill for existing listings (100 per admin load).
- * ---------------------------------------------------------------------- */
+/*
+--------------------------------------------------------------------------
+PART 2 - One-time backfill for existing listings (100 per admin load).
+--------------------------------------------------------------------------
+*/
 
 add_action(
 	'admin_init',
@@ -145,10 +194,12 @@ add_action(
 	}
 );
 
-/* -------------------------------------------------------------------------
- * PART 3 — Category helpers (read live, so never stale).
- * The category tree is small, so this is cheap and cached per request.
- * ---------------------------------------------------------------------- */
+/*
+--------------------------------------------------------------------------
+PART 3 - Category helpers (read live, so never stale).
+The category tree is small, so this is cheap and cached per request.
+--------------------------------------------------------------------------
+*/
 
 /**
  * Loads all listing category terms, keyed by term_id.
@@ -280,9 +331,11 @@ function hpse_category_tt_ids_for_keyword( $keyword ) {
 	return $cache[ $key ];
 }
 
-/* -------------------------------------------------------------------------
- * PART 4 — Teach the keyword search to read tier text and category data.
- * ---------------------------------------------------------------------- */
+/*
+--------------------------------------------------------------------------
+PART 4 - Teach the keyword search to read tier text and category data.
+--------------------------------------------------------------------------
+*/
 
 /**
  * Is this the front-end listing keyword search we want to extend?
@@ -410,3 +463,31 @@ add_filter(
 	10,
 	2
 );
+
+/**
+ * Adds the house "Donate" link to this plugin's row on the Plugins screen.
+ *
+ * WordPress fires plugin_row_meta for EVERY plugin on the screen, so without the basename
+ * test the link would appear on every row on the site. The markup is copied verbatim from
+ * the house spec in `releasing.md` rather than composed here: every plugin's row has to look
+ * identical and sessions have drifted before. The label is exactly "Donate", matching the
+ * wording WordPress itself uses in the details popup, and the icon is a Dashicon rather than
+ * Font Awesome because Dashicons is the admin's own font and is always loaded there.
+ * WordPress joins row-meta items with " | " itself, so this returns a bare anchor.
+ *
+ * @param array<string> $meta        Row meta links.
+ * @param string        $plugin_file Plugin file the row belongs to.
+ * @return array<string>
+ */
+function hpse_add_row_meta( $meta, $plugin_file ) {
+	if ( plugin_basename( __FILE__ ) === $plugin_file ) {
+		$meta[] = '<a href="' . esc_url( HPSE_SUPPORT_URL ) . '" target="_blank" rel="noopener noreferrer">'
+			. '<span class="dashicons dashicons-star-filled" style="font-size:14px;line-height:1.3;"></span> '
+			. esc_html__( 'Donate', 'better-search-for-hivepress' )
+			. '</a>';
+	}
+
+	return $meta;
+}
+
+add_filter( 'plugin_row_meta', 'hpse_add_row_meta', 10, 2 );
