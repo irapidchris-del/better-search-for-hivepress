@@ -2,21 +2,21 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Better Search for HivePress 1.4.0\n"
+"Project-Id-Version: Extended Search for HivePress 1.5.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/better-search-for-hivepress\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-19T11:52:29+00:00\n"
+"POT-Creation-Date: 2026-08-19T14:01:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: better-search-for-hivepress\n"
 
 #. Plugin Name of the plugin
 #: better-search-for-hivepress.php
-msgid "Better Search for HivePress"
+msgid "Extended Search for HivePress"
 msgstr ""
 
 #. Plugin URI of the plugin
@@ -26,7 +26,7 @@ msgstr ""
 
 #. Description of the plugin
 #: better-search-for-hivepress.php
-msgid "Extends the HivePress keyword search to also match pricing tier names/descriptions and listing category names/descriptions, including parent categories cascading to their sub-categories. Tier matching additionally needs HivePress Marketplace with \"Allow sellers to set pricing tiers\" switched on."
+msgid "Extends the HivePress keyword search to also match custom attribute values, vendor profile text, pricing tier text, tags and listing category descriptions, including parent categories cascading to their sub-categories."
 msgstr ""
 
 #. Author of the plugin
@@ -39,11 +39,11 @@ msgstr ""
 msgid "https://community.hivepress.io/u/chrisb/summary"
 msgstr ""
 
-#: better-search-for-hivepress.php:62
-msgid "Better Search for HivePress needs the HivePress plugin to be installed and activated. Until then it does nothing."
+#: better-search-for-hivepress.php:68
+msgid "Extended Search for HivePress needs the HivePress plugin to be installed and activated. Until then it does nothing."
 msgstr ""
 
-#: better-search-for-hivepress.php:478
+#: better-search-for-hivepress.php:728
 msgid "Donate"
 msgstr ""
 
@@ -58,11 +58,11 @@ msgstr ""
 #. translators: %s: new version number.
 #: updater.php:292
 #, php-format
-msgid "A new version of Better Search for HivePress (%s) is available."
+msgid "A new version of Extended Search for HivePress (%s) is available."
 msgstr ""
 
 #: updater.php:295
-msgid "Better Search for HivePress is up to date."
+msgid "Extended Search for HivePress is up to date."
 msgstr ""
 
 #: updater.php:298

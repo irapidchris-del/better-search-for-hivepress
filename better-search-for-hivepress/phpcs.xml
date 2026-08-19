@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="Better Search for HivePress">
+<ruleset name="Extended Search for HivePress">
 	<description>HivePress coding standards.</description>
 
 	<exclude-pattern>vendor/*</exclude-pattern>

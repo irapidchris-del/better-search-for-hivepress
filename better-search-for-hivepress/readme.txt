@@ -1,25 +1,29 @@
-=== Better Search for HivePress ===
+=== Extended Search for HivePress ===
 Contributors: chrisb
-Tags: hivepress, search, categories, pricing tiers, listings
+Tags: hivepress, search, attributes, vendors, listings
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Extends the HivePress keyword search to also match pricing tier text and listing category names and descriptions, including sub-categories.
+Extends the HivePress keyword search to also match your custom attributes, vendor profile text, pricing tiers, tags and category descriptions.
 
 == Description ==
 
-The HivePress keyword search looks at a listing's title, excerpt and content. Anything a seller wrote elsewhere is invisible to it, which is why a search for a service named only in a pricing tier, or for a word that only appears in a category description, comes back empty.
+Sellers write far more than a title and a description. They fill in your custom fields, they write a profile, they name their pricing options. A visitor searching for one of those words gets nothing back, and the listing that was the perfect match never appears.
 
-This plugin widens that search without changing anything else about it.
+HivePress can include a custom attribute in the keyword search, but only if someone remembers to tick "Indexable" on that attribute, and only for listings saved after they ticked it. Anything on the vendor's own profile, and anything inside a pricing tier, cannot be reached that way at all.
+
+This plugin widens the search without changing anything else about it, and without asking you to configure a thing.
 
 **What it adds**
 
-* **Pricing tier names and descriptions.** Tier text is stored inside the listing in a packed format the database cannot search, so the plugin keeps a plain-text copy alongside each listing and searches that instead. The copy is rewritten whenever the listing is saved, so it is never out of date.
-* **Listing category names and descriptions.** Read live from the taxonomy, so renaming a category takes effect immediately with nothing to rebuild.
+* **Every custom attribute a seller can type into.** The plugin reads your site's own attribute list, so whatever you have called your fields, they are covered. Nothing is named in code and there is no checkbox to remember.
+* **The seller's profile.** The built-in vendor description and every text field on the vendor form, including the one you may have renamed to "About Me". Searching a word from a seller's profile now finds their listings.
+* **Pricing tier names and descriptions.** Tier text is stored inside the listing in a packed format the database cannot search, so the plugin keeps a plain-text copy alongside each listing and searches that instead.
+* **Tags, categories and any drop-down attribute.** Term names and descriptions are read live from the taxonomies, so renaming a term takes effect immediately with nothing to rebuild.
 * **Sub-categories.** A keyword matching a parent category also finds listings filed under any of its children, however deep the tree goes.
 
 **What it deliberately leaves alone**
@@ -28,8 +32,9 @@ This plugin widens that search without changing anything else about it.
 * Negative search. Searching `-word` still excludes, because only the inclusion half of each keyword group is extended.
 * Result counts. A listing sitting in three matching categories is still returned once, never three times.
 * The admin listings table. Only front-end searches are widened.
+* Fields that hold no keywords. Prices, dates, times, coordinates, ratings and file uploads are skipped, as are contact details such as phone numbers and email addresses. Regions are skipped too, because a term like "England" would match every listing on the site.
 
-There is nothing to configure. On activation the plugin indexes your existing listings in batches of 100 as you move around wp-admin, then keeps itself up to date from then on.
+There is nothing to configure. The plugin indexes your existing listings and sellers in batches of 100 as you move around wp-admin, then keeps itself up to date from then on.
 
 == Installation ==
 
@@ -41,23 +46,50 @@ Updates arrive on the Plugins screen automatically, the same as any other plugin
 
 == Frequently Asked Questions ==
 
+= Which of my fields does it search? =
+
+Every attribute a seller can edit whose field type is Text or Textarea, on both the listing form and the vendor form, plus every drop-down, radio and checkbox attribute, which HivePress stores as terms. You do not list them anywhere; the plugin asks HivePress what your site has.
+
+= Do I still need to tick "Indexable" on my attributes? =
+
+No. That checkbox is HivePress's own way of adding an attribute to the keyword search, and it still works, but it only takes effect for listings saved afterwards. This plugin covers the same fields whether or not the box is ticked, and fills in your existing listings for you.
+
+= Why does a seller's profile text match all of their listings? =
+
+Because it describes all of them. A seller who writes "twenty years of bridal work" in their profile is telling you something true of everything they offer, so a search for "bridal" returns their listings.
+
 = Do I need HivePress Marketplace? =
 
-Only for the pricing tier half. Category and sub-category matching works with HivePress on its own. Tier matching also needs "Allow sellers to set pricing tiers" switched on in the HivePress settings, and does nothing until it is.
+Only for the pricing tier part. Everything else works with HivePress on its own. Tier matching also needs "Allow sellers to set pricing tiers" switched on in the HivePress settings, and does nothing until it is.
 
 = Will it slow my search down? =
 
-The category tree is read once per request and cached in memory, and tier text is matched against a plain-text column rather than unpacked at query time, so the added work is a single extra condition per keyword.
+Each keyword adds three conditions to the search: two against a plain-text copy stored next to the listing and the seller, and one against a list of matching terms worked out beforehand. That list costs two small term lookups per keyword. Nothing is unpacked at query time and nothing grows with the number of attributes you define.
 
 = My search results have not changed. =
 
-Give the backfill a moment: it processes 100 listings per admin page load, so a large site takes a few page loads to finish. Editing and saving a listing indexes it immediately.
+Give the indexing a moment: it processes 100 records per admin page load, so a large site takes a few page loads to finish. Editing and saving a listing or a profile indexes it immediately.
+
+= Can I search phone numbers, emails or addresses too? =
+
+Not by default, because they are contact details rather than search terms. A developer can add them with the `hivepress/v1/extended_search/index_field_types` filter.
 
 = Can I translate it? =
 
 Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save translations to Loco's "System" location so they survive plugin updates.
 
 == Changelog ==
+
+= 1.5.0 =
+* Added: every custom attribute a seller can type into is now searchable, on both the listing form and the vendor form. The plugin reads your site's own attribute list, so it fits any site without naming a single field in code and without any setting to switch on.
+* Added: the seller's profile is now searchable from the listing search. That covers the built-in vendor description and every text field on the vendor form, so a word someone wrote in their "About Me" finds their listings.
+* Added: tags and any drop-down, radio or checkbox attribute are now matched by term name and description, alongside categories.
+* Changed: the stored copy of each listing now holds all of its searchable text rather than pricing tiers alone, and sellers have a copy of their own. The plugin rebuilds both for your existing records automatically on the next few admin page loads.
+* Changed: terms are now looked up per keyword instead of loading every term into memory, so a site with thousands of tags is no longer paying for all of them on every search.
+* Fixed: pricing tier text was read through a check that can never pass on a HivePress model, so it always fell back to reading the raw value. The fallback was correct, which is why nothing looked wrong, but the check itself was dead code.
+
+= 1.4.1 =
+* Changed: the plugin is now called Extended Search for HivePress. The old name read as a judgement on the HivePress search rather than a description of what this adds to it. Nothing else changed: same settings, same behaviour, same folder, and updates continue to arrive as normal.
 
 = 1.4.0 =
 * Added: automatic updates. New versions now appear on the WordPress Plugins screen like any other plugin, with a "Check for updates" link on the plugin row and the release notes in the "View version details" popup. Previously updating meant downloading a zip by hand.
@@ -75,6 +107,12 @@ Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save tran
 * First release: pricing tier names and descriptions added to the keyword search.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Your custom attributes and your sellers' profile text are now searchable, with nothing to switch on. Existing listings and profiles are indexed automatically over the next few admin page loads.
+
+= 1.4.1 =
+A rename only. The plugin is now called Extended Search for HivePress. Nothing about how the search behaves has changed.
 
 = 1.4.0 =
 Adds automatic updates, so this is the last time you will need to install this plugin by hand. Nothing about how the search behaves has changed.

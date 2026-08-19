@@ -7,7 +7,7 @@
  * header in the main plugin file. The update package is the release asset named `*.zip`, which must
  * contain a single `better-search-for-hivepress` directory. No third-party library is involved.
  *
- * @package Better_Search_For_HivePress
+ * @package Extended_Search_For_HivePress
  */
 
 namespace BetterSearch\Updater;
@@ -289,10 +289,10 @@ function show_update_check_notice() {
 		$release = get_latest_release();
 
 		/* translators: %s: new version number. */
-		$message = sprintf( __( 'A new version of Better Search for HivePress (%s) is available.', 'better-search-for-hivepress' ), $release ? $release['version'] : '' );
+		$message = sprintf( __( 'A new version of Extended Search for HivePress (%s) is available.', 'better-search-for-hivepress' ), $release ? $release['version'] : '' );
 		$class   = 'notice-success';
 	} elseif ( 'none' === $status ) {
-		$message = __( 'Better Search for HivePress is up to date.', 'better-search-for-hivepress' );
+		$message = __( 'Extended Search for HivePress is up to date.', 'better-search-for-hivepress' );
 		$class   = 'notice-success';
 	} elseif ( 'error' === $status ) {
 		$message = __( 'Could not reach GitHub to check for updates. Please try again later.', 'better-search-for-hivepress' );
