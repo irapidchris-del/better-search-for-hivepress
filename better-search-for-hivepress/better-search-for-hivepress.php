@@ -3,7 +3,7 @@
  * Plugin Name: Extended Search for HivePress
  * Plugin URI:  https://github.com/irapidchris-del/better-search-for-hivepress
  * Description: Extends the HivePress keyword search to also match custom attribute values, vendor profile text, pricing tier text, tags and listing category descriptions, including parent categories cascading to their sub-categories.
- * Version:     1.5.0
+ * Version:     1.5.1
  * Author:      ChrisB @ HivePress Community
  * Author URI:  https://community.hivepress.io/u/chrisb/summary
  * Text Domain: better-search-for-hivepress
@@ -33,7 +33,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const HPSE_VERSION = '1.5.0';
+const HPSE_VERSION = '1.5.1';
 
 /**
  * Main plugin file, for the updater and for plugin_basename() checks.
@@ -705,6 +705,86 @@ add_filter(
 	10,
 	2
 );
+
+/*
+--------------------------------------------------------------------------
+PART 6 - Let an admin start the indexing again from the Plugins screen.
+
+Needed because the stored copies only rebuild when a listing is saved or when
+HPSE_INDEX_VERSION changes. A site that adds field types through the
+index_field_types filter would otherwise have no way of applying that to
+listings that already exist, short of re-saving every one of them.
+--------------------------------------------------------------------------
+*/
+
+/**
+ * Adds the "Rebuild search index" link to this plugin's row on the Plugins screen.
+ *
+ * Sits alongside the updater's own "Check for updates" link, because both are
+ * maintenance actions for this plugin rather than settings.
+ *
+ * @param array<string> $links Plugin action links.
+ * @return array<string>
+ */
+function hpse_add_rebuild_link( $links ) {
+	if ( current_user_can( 'activate_plugins' ) ) {
+		$links[] = '<a href="' . esc_url( wp_nonce_url( self_admin_url( 'plugins.php?hpse_rebuild_index=1' ), 'hpse_rebuild_index' ) ) . '">'
+			. esc_html__( 'Rebuild search index', 'better-search-for-hivepress' )
+			. '</a>';
+	}
+
+	return $links;
+}
+
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'hpse_add_rebuild_link' );
+add_filter( 'network_admin_plugin_action_links_' . plugin_basename( __FILE__ ), 'hpse_add_rebuild_link' );
+
+/**
+ * Handles the rebuild request.
+ *
+ * Clearing the stored progress is all that is needed: the backfill on the next
+ * admin page load sees no state, starts again from the beginning, and works
+ * through everything a batch at a time exactly as it does on a fresh install.
+ *
+ * @return void
+ */
+function hpse_handle_rebuild() {
+	if ( ! isset( $_GET['hpse_rebuild_index'] ) || ! current_user_can( 'activate_plugins' ) ) {
+		return;
+	}
+
+	check_admin_referer( 'hpse_rebuild_index' );
+
+	delete_option( 'hpse_index_state' );
+
+	wp_safe_redirect( add_query_arg( 'hpse_rebuilt', '1', self_admin_url( 'plugins.php' ) ) );
+
+	exit;
+}
+
+add_action( 'admin_init', 'hpse_handle_rebuild' );
+
+/**
+ * Says that the rebuild has started.
+ *
+ * @return void
+ */
+function hpse_show_rebuild_notice() {
+
+	// This only decides whether to print one fixed sentence after the nonce-verified
+	// handler above redirected here. Nothing is processed and nothing changes state.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ! isset( $_GET['hpse_rebuilt'] ) || ! current_user_can( 'activate_plugins' ) ) {
+		return;
+	}
+
+	echo '<div class="notice notice-success is-dismissible"><p>'
+		. esc_html__( 'Extended Search for HivePress is rebuilding its search index. It works through 100 listings and profiles per admin page load, so it finishes over the next few page loads. Searching keeps working while it runs.', 'better-search-for-hivepress' )
+		. '</p></div>';
+}
+
+add_action( 'admin_notices', 'hpse_show_rebuild_notice' );
+add_action( 'network_admin_notices', 'hpse_show_rebuild_notice' );
 
 /**
  * Adds the house "Donate" link to this plugin's row on the Plugins screen.

@@ -4,7 +4,7 @@ Tags: hivepress, search, attributes, vendors, listings
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,7 +42,7 @@ There is nothing to configure. The plugin indexes your existing listings and sel
 2. In wp-admin go to Plugins, Add New, Upload Plugin, and choose the zip.
 3. Activate it. There are no settings.
 
-Updates arrive on the Plugins screen automatically, the same as any other plugin, and there is a "Check for updates" link on the plugin's row if you would rather not wait.
+Updates arrive on the Plugins screen automatically, the same as any other plugin, and there is a "Check for updates" link on the plugin's row if you would rather not wait. Next to it is a "Rebuild search index" link, for the rare occasion you want the indexing to start again from scratch.
 
 == Frequently Asked Questions ==
 
@@ -72,13 +72,16 @@ Give the indexing a moment: it processes 100 records per admin page load, so a l
 
 = Can I search phone numbers, emails or addresses too? =
 
-Not by default, because they are contact details rather than search terms. A developer can add them with the `hivepress/v1/extended_search/index_field_types` filter.
+Not by default, because they are contact details rather than search terms. A developer can add them with the `hivepress/v1/extended_search/index_field_types` filter. After changing that list, use the "Rebuild search index" link on the plugin's row on the Plugins screen so the change reaches listings that already exist.
 
 = Can I translate it? =
 
 Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save translations to Loco's "System" location so they survive plugin updates.
 
 == Changelog ==
+
+= 1.5.1 =
+* Added: a "Rebuild search index" link on the plugin's row on the Plugins screen. Useful after changing which field types are indexed, or any other time you want the plugin to work through everything again from scratch. Searching keeps working while it runs.
 
 = 1.5.0 =
 * Added: every custom attribute a seller can type into is now searchable, on both the listing form and the vendor form. The plugin reads your site's own attribute list, so it fits any site without naming a single field in code and without any setting to switch on.
@@ -107,6 +110,9 @@ Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save tran
 * First release: pricing tier names and descriptions added to the keyword search.
 
 == Upgrade Notice ==
+
+= 1.5.1 =
+Adds a "Rebuild search index" link to the plugin's row on the Plugins screen. Nothing about how the search behaves has changed.
 
 = 1.5.0 =
 Your custom attributes and your sellers' profile text are now searchable, with nothing to switch on. Existing listings and profiles are indexed automatically over the next few admin page loads.
