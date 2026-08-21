@@ -4,7 +4,7 @@ Tags: hivepress, search, attributes, vendors, listings
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,17 @@ Not by default, because they are contact details rather than search terms. A dev
 Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save translations to Loco's "System" location so they survive plugin updates.
 
 == Changelog ==
+
+= 1.5.3 =
+* Fixed - checking for updates no longer holds up an admin page. The check ran while WordPress was
+  building the Plugins screen, so on a site with several of these extensions one page load made one
+  request to GitHub after another and could sit there for many seconds, once, before behaving
+  normally again for hours. The check now runs in the background moments later. Pressing Check for
+  updates still asks GitHub straight away, because you are waiting for that answer.
+* Fixed - "View details" is back on the Plugins screen. WordPress only offers that link for a
+  plugin that has told it about itself, and this one stayed quiet whenever there was nothing to
+  update to, which is almost always. The details popup, its changelog and the donate link inside
+  it were all unreachable from the Plugins screen as a result.
 
 = 1.5.2 =
 * Checking for updates no longer reports "Could not reach GitHub" when nothing is wrong. GitHub allows a server only a limited number of anonymous update checks each hour, shared by every plugin on the site and, on shared hosting, by every other site on the same server. Running out is ordinary, but it was reported as though the site could not reach GitHub at all. Update checks now read the release from github.com, which sets no such limit, so the message no longer appears. If the limit is ever reached by some other route, the notice now says so plainly instead of blaming your connection.

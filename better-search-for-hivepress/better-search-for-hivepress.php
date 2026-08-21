@@ -3,7 +3,7 @@
  * Plugin Name: Extended Search for HivePress
  * Plugin URI:  https://github.com/irapidchris-del/better-search-for-hivepress
  * Description: Extends the HivePress keyword search to also match custom attribute values, vendor profile text, pricing tier text, tags and listing category descriptions, including parent categories cascading to their sub-categories.
- * Version:     1.5.2
+ * Version:     1.5.3
  * Author:      ChrisB @ HivePress Community
  * Author URI:  https://community.hivepress.io/u/chrisb/summary
  * Text Domain: better-search-for-hivepress
@@ -33,7 +33,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const HPSE_VERSION = '1.5.2';
+const HPSE_VERSION = '1.5.3';
 
 /**
  * Main plugin file, for the updater and for plugin_basename() checks.
