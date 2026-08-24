@@ -3,7 +3,7 @@
  * Plugin Name: Extended Search for HivePress
  * Plugin URI:  https://github.com/irapidchris-del/better-search-for-hivepress
  * Description: Extends the HivePress keyword search to also match custom attribute values, vendor profile text, pricing tier text, tags and listing category descriptions, including parent categories cascading to their sub-categories.
- * Version:     1.5.4
+ * Version:     1.5.5
  * Author:      ChrisB @ HivePress Community
  * Author URI:  https://community.hivepress.io/u/chrisb/summary
  * Text Domain: better-search-for-hivepress
@@ -33,7 +33,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const HPSE_VERSION = '1.5.4';
+const HPSE_VERSION = '1.5.5';
 
 /**
  * Main plugin file, for the updater and for plugin_basename() checks.
@@ -825,15 +825,62 @@ add_filter( 'network_admin_plugin_action_links_' . plugin_basename( __FILE__ ), 
  * @return void
  */
 function hpse_handle_rebuild() {
-	if ( ! isset( $_GET['hpse_rebuild_index'] ) || ! current_user_can( 'activate_plugins' ) ) {
+	if ( ! isset( $_GET['hpse_rebuild_index'] ) ) {
+		return;
+	}
+
+	$network = is_multisite() && is_network_admin();
+
+	if ( ! current_user_can( $network ? 'manage_network_plugins' : 'activate_plugins' ) ) {
 		return;
 	}
 
 	check_admin_referer( 'hpse_rebuild_index' );
 
-	delete_option( 'hpse_index_state' );
+	$sites = 1;
 
-	wp_safe_redirect( add_query_arg( 'hpse_rebuilt', '1', self_admin_url( 'plugins.php' ) ) );
+	if ( $network ) {
+
+		/*
+		 * The index state is a per-site option, so from the network screen a plain
+		 * delete_option() cleared the MAIN site and nothing else, while the success notice said
+		 * the whole network was rebuilding. Worse, the link is only reachable from here when the
+		 * plugin is network-activated, in which case it does not appear on any individual site's
+		 * Plugins screen at all - so on those installs every site but one had no way to rebuild
+		 * and no way to find that out.
+		 *
+		 * Every site is reset, one cheap option delete each. It is a deliberate, rare click, and
+		 * the notice reports the number so a large network can see what it did.
+		 */
+		$sites = 0;
+
+		foreach ( get_sites(
+			[
+				'fields' => 'ids',
+				'number' => 0,
+			]
+		) as $site_id ) {
+			switch_to_blog( (int) $site_id );
+
+			delete_option( 'hpse_index_state' );
+
+			restore_current_blog();
+
+			$sites++;
+		}
+	} else {
+		delete_option( 'hpse_index_state' );
+	}
+
+	wp_safe_redirect(
+		add_query_arg(
+			[
+				'hpse_rebuilt' => '1',
+				'hpse_sites'   => (int) $sites,
+			],
+			self_admin_url( 'plugins.php' )
+		)
+	);
 
 	exit;
 }
@@ -847,16 +894,30 @@ add_action( 'admin_init', 'hpse_handle_rebuild' );
  */
 function hpse_show_rebuild_notice() {
 
-	// This only decides whether to print one fixed sentence after the nonce-verified
-	// handler above redirected here. Nothing is processed and nothing changes state.
+	// This only decides which of two fixed sentences to print after the nonce-verified handler
+	// above redirected here. Nothing is processed and nothing changes state.
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	if ( ! isset( $_GET['hpse_rebuilt'] ) || ! current_user_can( 'activate_plugins' ) ) {
 		return;
 	}
 
-	echo '<div class="notice notice-success is-dismissible"><p>'
-		. esc_html__( 'Extended Search for HivePress is rebuilding its search index. It works through 100 listings and profiles per admin page load, so it finishes over the next few page loads. Searching keeps working while it runs.', 'better-search-for-hivepress' )
-		. '</p></div>';
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$sites = isset( $_GET['hpse_sites'] ) ? absint( $_GET['hpse_sites'] ) : 1;
+
+	// The count is reported rather than implied, because the network version of this used to claim
+	// something it had not done.
+	// Escaped once, on output below. Translated strings are not pre-escaped here: escaping twice
+	// happens to be harmless because esc_html() does not double-encode, but it hides where the
+	// escaping decision was made.
+	$message = $sites > 1
+		? sprintf(
+			/* translators: %s: number of sites. */
+			__( 'Extended Search for HivePress is rebuilding its search index on %s sites. Each site works through 100 listings and profiles per admin page load, so it finishes over the next few page loads. Searching keeps working while it runs.', 'better-search-for-hivepress' ),
+			number_format_i18n( $sites )
+		)
+		: __( 'Extended Search for HivePress is rebuilding its search index. It works through 100 listings and profiles per admin page load, so it finishes over the next few page loads. Searching keeps working while it runs.', 'better-search-for-hivepress' );
+
+	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
 }
 
 add_action( 'admin_notices', 'hpse_show_rebuild_notice' );

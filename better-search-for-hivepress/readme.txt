@@ -4,7 +4,7 @@ Tags: hivepress, search, attributes, vendors, listings
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.4
+Stable tag: 1.5.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,12 @@ Not by default, because they are contact details rather than search terms. A dev
 Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save translations to Loco's "System" location so they survive plugin updates.
 
 == Changelog ==
+
+= 1.5.5 =
+* Fixed - on a multisite network, "Rebuild search index" now rebuilds every site rather than only
+  the main one, and says how many sites it has started. Single site installs are unaffected.
+* Fixed - deleting the plugin now also clears the update check's own leftovers and cancels its
+  background update check.
 
 = 1.5.4 =
 * Fixed - listings added by a CSV import, or created by another plugin's code, are now searchable
