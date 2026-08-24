@@ -4,7 +4,7 @@ Tags: hivepress, search, attributes, vendors, listings
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,16 @@ Not by default, because they are contact details rather than search terms. A dev
 Yes. The plugin ships a .pot file, so Loco Translate can pair with it. Save translations to Loco's "System" location so they survive plugin updates.
 
 == Changelog ==
+
+= 1.5.4 =
+* Fixed - listings added by a CSV import, or created by another plugin's code, are now searchable
+  by their attribute text. The searchable copy was written at the moment HivePress announced a
+  new listing, which is before the attributes themselves are saved, so a listing created in one
+  step got an empty copy that nothing ever corrected. Listings submitted through the site were
+  unaffected, because submitting saves twice and the second save filled the copy in. The copy is
+  now written at the end of the request, after every part of the save has landed. Seller profiles created the same
+  way had the same gap and get the same fix. Updating re-runs the indexing pass, 100 records per
+  admin page load, so any copies the old timing left empty are filled in automatically.
 
 = 1.5.3 =
 * Fixed - checking for updates no longer holds up an admin page. The check ran while WordPress was

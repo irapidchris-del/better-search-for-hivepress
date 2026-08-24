@@ -3,7 +3,7 @@
  * Plugin Name: Extended Search for HivePress
  * Plugin URI:  https://github.com/irapidchris-del/better-search-for-hivepress
  * Description: Extends the HivePress keyword search to also match custom attribute values, vendor profile text, pricing tier text, tags and listing category descriptions, including parent categories cascading to their sub-categories.
- * Version:     1.5.3
+ * Version:     1.5.4
  * Author:      ChrisB @ HivePress Community
  * Author URI:  https://community.hivepress.io/u/chrisb/summary
  * Text Domain: better-search-for-hivepress
@@ -33,7 +33,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const HPSE_VERSION = '1.5.3';
+const HPSE_VERSION = '1.5.4';
 
 /**
  * Main plugin file, for the updater and for plugin_basename() checks.
@@ -96,12 +96,16 @@ const HPSE_LEGACY_TIER_META = '_hpse_tier_index';
 const HPSE_CATEGORY_TAX = 'hp_listing_category';
 
 /**
- * Bumped whenever the shape of the stored copies changes.
+ * Bumped whenever the shape of the stored copies changes, or whenever a fix
+ * means copies already stored may be wrong.
  *
  * A change here restarts the backfill, so existing sites pick the new shape up
- * without anyone having to re-save every listing.
+ * without anyone having to re-save every listing. Version 3 changed no shape:
+ * it re-runs the backfill because versions up to 1.5.3 stored an empty copy
+ * for any record created in a single save (CSV imports, programmatic
+ * creation), and those copies need filling in.
  */
-const HPSE_INDEX_VERSION = 2;
+const HPSE_INDEX_VERSION = 3;
 
 /*
 --------------------------------------------------------------------------
@@ -369,12 +373,84 @@ function hpse_build_vendor_index( $vendor_id ) {
 }
 
 /**
+ * Rebuilds one record's searchable copy from what is stored right now.
+ *
+ * @param string $model   Model name, 'listing' or 'vendor'.
+ * @param int    $post_id Post ID.
+ */
+function hpse_write_index( $model, $post_id ) {
+	if ( 'vendor' === $model ) {
+		hpse_store_index( $post_id, HPSE_VENDOR_INDEX_META, hpse_build_vendor_index( $post_id ) );
+	} else {
+		hpse_store_index( $post_id, HPSE_LISTING_INDEX_META, hpse_build_listing_index( $post_id ) );
+	}
+}
+
+/**
+ * Queues one record so its searchable copy is rebuilt at the end of the request.
+ *
+ * The create and update actions cannot be acted on the moment they fire,
+ * because HivePress fires them from save_post - that is, from INSIDE
+ * wp_insert_post(), BEFORE its model writes the terms and the attribute meta.
+ * A record created in a single save (a row of the HivePress CSV importer, any
+ * programmatic wp_insert_post()) has no attribute meta at all at that instant,
+ * and on the create path no update action ever follows, so reading the meta
+ * straight away would store an empty copy that nothing later corrects - which
+ * is exactly what versions up to 1.5.3 did. Waiting until shutdown reads the
+ * meta after every write of the save has landed, whichever path saved the
+ * record. Queueing by ID also de-duplicates: if anything saves the same record
+ * more than once within one request, the copy is still built only once. (The
+ * front-end submit flow is not that case - it creates the auto-draft in one
+ * request and sends the attribute values in a later one, so each request
+ * builds its own copy exactly as before.)
+ *
+ * @param string $model   Model name, 'listing' or 'vendor'.
+ * @param int    $post_id Post ID.
+ */
+function hpse_queue_index_refresh( $model, $post_id ) {
+	static $queue  = [];
+	static $hooked = false;
+
+	$post_id = (int) $post_id;
+
+	if ( $post_id <= 0 ) {
+		return;
+	}
+
+	// A save landing while shutdown is already running would arrive after the
+	// queue has been flushed, so past that point the copy is written directly.
+	if ( did_action( 'shutdown' ) ) {
+		hpse_write_index( $model, $post_id );
+
+		return;
+	}
+
+	// Keyed by ID, so a record saved twice in one request is indexed once.
+	$queue[ $model ][ $post_id ] = true;
+
+	if ( ! $hooked ) {
+		$hooked = true;
+
+		add_action(
+			'shutdown',
+			function () use ( &$queue ) {
+				foreach ( $queue as $queued_model => $ids ) {
+					foreach ( array_keys( $ids ) as $queued_id ) {
+						hpse_write_index( $queued_model, $queued_id );
+					}
+				}
+			}
+		);
+	}
+}
+
+/**
  * Rebuilds a listing's searchable copy whenever it is created or updated.
  *
  * @param int $listing_id Listing ID.
  */
 function hpse_refresh_listing_index( $listing_id ) {
-	hpse_store_index( $listing_id, HPSE_LISTING_INDEX_META, hpse_build_listing_index( $listing_id ) );
+	hpse_queue_index_refresh( 'listing', $listing_id );
 }
 add_action( 'hivepress/v1/models/listing/create', 'hpse_refresh_listing_index', 100 );
 add_action( 'hivepress/v1/models/listing/update', 'hpse_refresh_listing_index', 100 );
@@ -385,7 +461,7 @@ add_action( 'hivepress/v1/models/listing/update', 'hpse_refresh_listing_index', 
  * @param int $vendor_id Vendor ID.
  */
 function hpse_refresh_vendor_index( $vendor_id ) {
-	hpse_store_index( $vendor_id, HPSE_VENDOR_INDEX_META, hpse_build_vendor_index( $vendor_id ) );
+	hpse_queue_index_refresh( 'vendor', $vendor_id );
 }
 add_action( 'hivepress/v1/models/vendor/create', 'hpse_refresh_vendor_index', 100 );
 add_action( 'hivepress/v1/models/vendor/update', 'hpse_refresh_vendor_index', 100 );
