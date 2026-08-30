@@ -22,17 +22,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The plugin lives in a sub-folder of this repo, so the zip is built from
-      # there rather than from the repo root. Only the plugin's own shipped files
-      # are copied, which keeps phpcs.xml and .github out of what users install.
+      # The plugin sits at the repo root, matching every other extension in the
+      # family (flattened 2026-08-30; it used to live in a sub-folder). Only the
+      # files named below are copied, which keeps phpcs.xml and .github out of
+      # what users install.
       - name: Build plugin zip
         run: |
-          mkdir -p build/better-search-for-hivepress
-          cd better-search-for-hivepress
-          cp better-search-for-hivepress.php updater.php uninstall.php readme.txt ../build/better-search-for-hivepress/
-          cp -r languages ../build/better-search-for-hivepress/
-          cd ../build
-          zip -r better-search-for-hivepress.zip better-search-for-hivepress
+          set -euo pipefail
+          SLUG=better-search-for-hivepress
+          mkdir -p "build/$SLUG"
+
+          # Everything that ships is named here. Add any new top-level file or
+          # folder to this list as well, or it is silently absent from the
+          # release while every local test still passes. The warning is what
+          # catches a rename, which is otherwise indistinguishable from a file
+          # that was never meant to ship.
+          for item in "$SLUG.php" updater.php uninstall.php readme.txt languages; do
+            if [ -e "$item" ]; then
+              cp -r "$item" "build/$SLUG/"
+            else
+              echo "warning: $item is absent from the repository" >&2
+            fi
+          done
+
+          cd build
+          zip -qr "$SLUG.zip" "$SLUG"
 
       - name: Create or refresh the release (manual dispatch)
         if: github.event_name == 'workflow_dispatch'
