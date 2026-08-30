@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Extended Search for HivePress 1.5.5\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/better-search-for-hivepress\n"
+"Report-Msgid-Bugs-To: https://github.com/irapidchris-del/better-search-for-hivepress/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -14,29 +14,9 @@ msgstr ""
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: better-search-for-hivepress\n"
 
-#. Plugin Name of the plugin
-#: better-search-for-hivepress.php
-msgid "Extended Search for HivePress"
-msgstr ""
-
-#. Plugin URI of the plugin
-#: better-search-for-hivepress.php
-msgid "https://github.com/irapidchris-del/better-search-for-hivepress"
-msgstr ""
-
 #. Description of the plugin
 #: better-search-for-hivepress.php
 msgid "Extends the HivePress keyword search to also match custom attribute values, vendor profile text, pricing tier text, tags and listing category descriptions, including parent categories cascading to their sub-categories."
-msgstr ""
-
-#. Author of the plugin
-#: better-search-for-hivepress.php
-msgid "ChrisB @ HivePress Community"
-msgstr ""
-
-#. Author URI of the plugin
-#: better-search-for-hivepress.php
-msgid "https://community.hivepress.io/u/chrisb/summary"
 msgstr ""
 
 #: better-search-for-hivepress.php:68

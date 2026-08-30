@@ -840,7 +840,6 @@ function hpse_handle_rebuild() {
 	$sites = 1;
 
 	if ( $network ) {
-
 		/*
 		 * The index state is a per-site option, so from the network screen a plain
 		 * delete_option() cleared the MAIN site and nothing else, while the success notice said
@@ -866,7 +865,7 @@ function hpse_handle_rebuild() {
 
 			restore_current_blog();
 
-			$sites++;
+			++$sites;
 		}
 	} else {
 		delete_option( 'hpse_index_state' );
