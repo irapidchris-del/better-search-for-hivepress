@@ -741,7 +741,7 @@ add_filter(
 			$pattern,
 			function ( $m ) use ( &$index, $terms, $wpdb, $listing_meta, $vendor_meta ) {
 
-				// $m[1] is the exact quoted term literal WordPress already built, e.g. '%hair%'.
+				// $m[1] is the exact quoted term literal WordPress already built, e.g. '%garden%'.
 				$literal = $m[1];
 
 				// The listing's own attribute and pricing tier text.
